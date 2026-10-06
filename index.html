@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>My Daily Routine</title>
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="theme-color" content="#8b5cf6">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Routine">
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #fff1f8, #eef5ff, #f4edff);
+    color: #333;
+}
+
+.container { max-width: 700px; margin: auto; padding: 15px; }
+
+.header {
+    background: linear-gradient(135deg, #8b5cf6, #ec4899);
+    color: white;
+    padding: 25px 20px;
+    border-radius: 25px;
+    text-align: center;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+}
+.header h1 { margin: 0; font-size: 28px; }
+.greeting { margin-top: 8px; font-size: 16px; }
+.date { margin-top: 8px; font-size: 14px; }
+.clock { font-size: 30px; font-weight: bold; margin-top: 12px; }
+
+.progress-box {
+    margin: 20px auto 5px;
+    width: 130px; height: 130px;
+    border-radius: 50%;
+    background: conic-gradient(#fff 0deg, rgba(255,255,255,0.25) 0deg);
+    display: flex; align-items: center; justify-content: center;
+}
+.progress-inner {
+    width: 105px; height: 105px;
+    border-radius: 50%;
+    background: #8b5cf6;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+}
+.progress-number { font-size: 25px; font-weight: bold; }
+
+.stats { display: flex; gap: 10px; margin-top: 15px; }
+.stat {
+    flex: 1; background: white; border-radius: 18px;
+    padding: 15px; text-align: center;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.06);
+}
+.stat strong { display: block; font-size: 22px; color: #8b5cf6; }
+
+.week {
+    margin-top: 20px; background: white; border-radius: 20px;
+    padding: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.06);
+}
+.week h3 { margin-top: 0; }
+.days { display: flex; justify-content: space-between; }
+.day { text-align: center; font-size: 12px; }
+.day-circle {
+    width: 35px; height: 35px; border-radius: 50%;
+    background: #eee; margin: 5px auto;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: bold;
+}
+.day-circle.done { background: #8b5cf6; color: white; }
+
+.section { margin-top: 20px; }
+.section-title { font-size: 21px; font-weight: bold; margin-bottom: 10px; }
+
+.card {
+    background: white; border-radius: 20px; padding: 15px;
+    margin-bottom: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.06);
+}
+.card h3 { margin-top: 0; }
+
+.task {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px; margin: 7px 0; border-radius: 12px; background: #fafafa;
+}
+.task input { width: 20px; height: 20px; }
+.task.done { background: #eeeaff; text-decoration: line-through; color: #888; }
+
+.routine-item {
+    display: flex; gap: 12px; padding: 12px; margin: 8px 0;
+    border-radius: 14px; background: #faf7ff;
+}
+.time { min-width: 95px; font-weight: bold; color: #8b5cf6; }
+
+.reset-btn, .install-btn {
+    width: 100%; padding: 14px; border: none; border-radius: 15px;
+    color: white; font-size: 16px; font-weight: bold; margin-top: 10px;
+}
+.reset-btn { background: #ef4444; }
+.install-btn { background: #10b981; display: none; }
+
+.footer { text-align: center; padding: 25px 10px; color: #777; font-size: 13px; }
+
+@media (max-width: 500px) {
+    .header h1 { font-size: 24px; }
+    .clock { font-size: 25px; }
+    .time { min-width: 80px; font-size: 13px; }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="header">
+        <h1>🌸 My Daily Routine</h1>
+        <div class="greeting" id="greeting">Good Morning 💕</div>
+        <div class="date" id="date"></div>
+        <div class="clock" id="clock"></div>
+
+        <div class="progress-box" id="progressCircle">
+            <div class="progress-inner">
+                <div class="progress-number" id="progressPercent">0%</div>
+                <small>Completed</small>
+            </div>
+        </div>
+
+        <div>
+            <span id="completedCount">0</span> /
+            <span id="totalCount">0</span> tasks
+        </div>
+    </div>
+
+    <div class="stats">
+        <div class="stat">🔥<strong id="streak">0</strong>Day Streak</div>
+        <div class="stat">🏆<strong id="bestStreak">0</strong>Best Streak</div>
+    </div>
+
+    <div class="week">
+        <h3>📅 This Week</h3>
+        <div class="days" id="weekDays"></div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">🕐 Daily Routine</div>
+        <div class="card">
+            <div class="routine-item"><div class="time">5:00 AM</div><div>🌅 Wake up</div></div>
+            <div class="routine-item"><div class="time">5:30–6:30</div><div>📖 Reading</div></div>
+            <div class="routine-item"><div class="time">6:30–9:00</div><div>😴 Sleep</div></div>
+            <div class="routine-item"><div class="time">9:00 AM</div><div>🌞 Wake up</div></div>
+            <div class="routine-item"><div class="time">9:00–9:50</div><div>✨ Get ready</div></div>
+            <div class="routine-item"><div class="time">6:00 PM</div><div>🏠 Home</div></div>
+            <div class="routine-item"><div class="time">6:00–7:00</div><div>🧹 Household work</div></div>
+            <div class="routine-item"><div class="time">7:00 PM</div><div>🌸 Relax</div></div>
+            <div class="routine-item"><div class="time">7:00–8:30</div><div>📚 Study / College work</div></div>
+            <div class="routine-item"><div class="time">8:30–9:00</div><div>🛁 Ayaan bath & care</div></div>
+            <div class="routine-item"><div class="time">9:00–9:30</div><div>💻 Coding</div></div>
+            <div class="routine-item"><div class="time">10:30 PM</div><div>🍽️ Food</div></div>
+            <div class="routine-item"><div class="time">11:30 PM</div><div>📱 Phone</div></div>
+            <div class="routine-item"><div class="time">12:00 AM</div><div>🌙 Sleep</div></div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">🕌 Prayers</div>
+        <div class="card">
+            <label class="task"><input type="checkbox" data-task="fajr"> 🌅 Fajr</label>
+            <label class="task"><input type="checkbox" data-task="dhuhr"> ☀️ Dhuhr</label>
+            <label class="task"><input type="checkbox" data-task="asr"> 🌤️ Asr</label>
+            <label class="task"><input type="checkbox" data-task="maghrib"> 🌇 Maghrib</label>
+            <label class="task"><input type="checkbox" data-task="isha"> 🌙 Isha</label>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">📚 Study & Work</div>
+        <div class="card">
+            <label class="task"><input type="checkbox" data-task="study"> 📖 Daily Study</label>
+            <label class="task"><input type="checkbox" data-task="house"> 🏠 Household Work</label>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">👶 Ayaan Care</div>
+        <div class="card">
+            <label class="task"><input type="checkbox" data-task="ayaanBath"> 🛁 Ayaan Bath</label>
+            <label class="task"><input type="checkbox" data-task="ayaanCare"> ❤️ Ayaan Care</label>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">🧴 Self Care</div>
+        <div class="card">
+            <label class="task"><input type="checkbox" data-task="morningSkin"> 🌞 Morning Skincare</label>
+            <label class="task"><input type="checkbox" data-task="nightMask"> 🌙 Night DIY Mask</label>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">🍎 Food Care</div>
+        <div class="card">
+            <label class="task"><input type="checkbox" data-task="eggs"> 🥚 2 Boiled Eggs</label>
+            <label class="task"><input type="checkbox" data-task="milk"> 🥛 1 Glass Milk</label>
+            <label class="task"><input type="checkbox" data-task="fruit"> 🍎 1 Fruit</label>
+        </div>
+    </div>
+
+    <button class="install-btn" id="installBtn">📱 Install My Daily Routine App</button>
+    <button class="reset-btn" onclick="resetToday()">🔄 Reset Today</button>
+
+    <div class="footer">Made with 💕 for a better everyday life</div>
+
+</div>
+
+<script>
+const tasks = document.querySelectorAll("input[data-task]");
+
+function getLocalDateKey(d = new Date()) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+}
+
+function getTodayData() {
+    return JSON.parse(localStorage.getItem("routine_" + getLocalDateKey()) || "{}");
+}
+
+function saveTodayData() {
+    const data = {};
+    tasks.forEach(task => { data[task.dataset.task] = task.checked; });
+    localStorage.setItem("routine_" + getLocalDateKey(), JSON.stringify(data));
+}
+
+function loadTodayData() {
+    const data = getTodayData();
+    tasks.forEach(task => {
+        task.checked = data[task.dataset.task] || false;
+        updateTaskStyle(task);
+    });
+    updateProgress();
+}
+
+function updateTaskStyle(task) {
+    task.closest(".task").classList.toggle("done", task.checked);
+}
+
+tasks.forEach(task => {
+    task.addEventListener("change", function () {
+        updateTaskStyle(this);
+        saveTodayData();
+        updateProgress();
+    });
+});
+
+function updateProgress() {
+    let completed = 0;
+    tasks.forEach(task => { if (task.checked) completed++; });
+
+    const total = tasks.length;
+    const percent = total === 0 ? 0 : Math.round((completed / total) * 100);
+
+    document.getElementById("completedCount").textContent = completed;
+    document.getElementById("totalCount").textContent = total;
+    document.getElementById("progressPercent").textContent = percent + "%";
+    document.getElementById("progressCircle").style.background =
+        `conic-gradient(#ffffff ${percent * 3.6}deg, rgba(255,255,255,0.25) 0deg)`;
+
+    updateStreak();
+    updateWeek();
+}
+
+let lastDateKey = getLocalDateKey();
+
+function updateClock() {
+    const now = new Date();
+    let hours = now.getHours();
+    const minutes = String(now.getMinutes()).padStart(2, "0");
+    const seconds = String(now.getSeconds()).padStart(2, "0");
+    const ampm = hours >= 12 ? "PM" : "AM";
+    hours = hours % 12 || 12;
+
+    document.getElementById("clock").textContent = `${hours}:${minutes}:${seconds} ${ampm}`;
+    document.getElementById("date").textContent =
+        now.toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+
+    let greeting = "Good Morning 🌸";
+    const h = now.getHours();
+    if (h >= 12 && h < 17) greeting = "Good Afternoon ☀️";
+    if (h >= 17 && h < 21) greeting = "Good Evening 🌷";
+    if (h >= 21 || h < 5) greeting = "Good Night 🌙";
+    document.getElementById("greeting").textContent = greeting;
+
+    // New day while app is open → start fresh
+    const key = getLocalDateKey(now);
+    if (key !== lastDateKey) {
+        lastDateKey = key;
+        loadTodayData();
+    }
+}
+
+function isDayComplete(date) {
+    const data = JSON.parse(localStorage.getItem("routine_" + getLocalDateKey(date)) || "{}");
+    return tasks.length > 0 && Array.from(tasks).every(task => data[task.dataset.task] === true);
+}
+
+function updateStreak() {
+    let streak = 0;
+    let date = new Date();
+
+    // If today isn't finished yet, don't break the streak — count from yesterday
+    if (!isDayComplete(date)) date.setDate(date.getDate() - 1);
+
+    while (isDayComplete(date)) {
+        streak++;
+        date.setDate(date.getDate() - 1);
+    }
+
+    document.getElementById("streak").textContent = streak;
+
+    let best = Number(localStorage.getItem("bestStreak") || 0);
+    if (streak > best) {
+        best = streak;
+        localStorage.setItem("bestStreak", best);
+    }
+    document.getElementById("bestStreak").textContent = best;
+}
+
+function updateWeek() {
+    const container = document.getElementById("weekDays");
+    container.innerHTML = "";
+
+    const today = new Date();
+    const day = today.getDay();
+    const mondayOffset = day === 0 ? -6 : 1 - day;
+    const monday = new Date(today);
+    monday.setDate(today.getDate() + mondayOffset);
+
+    const names = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+    for (let i = 0; i < 7; i++) {
+        const date = new Date(monday);
+        date.setDate(monday.getDate() + i);
+
+        const wrapper = document.createElement("div");
+        wrapper.className = "day";
+
+        const circle = document.createElement("div");
+        circle.className = "day-circle";
+        circle.textContent = date.getDate();
+        if (isDayComplete(date)) circle.classList.add("done");
+
+        const name = document.createElement("div");
+        name.textContent = names[i];
+
+        wrapper.appendChild(circle);
+        wrapper.appendChild(name);
+        container.appendChild(wrapper);
+    }
+}
+
+function resetToday() {
+    if (!confirm("Reset all today's tasks?")) return;
+    localStorage.removeItem("routine_" + getLocalDateKey());
+    tasks.forEach(task => { task.checked = false; updateTaskStyle(task); });
+    updateProgress();
+}
+
+// ---- Install ----
+let deferredPrompt;
+
+window.addEventListener("beforeinstallprompt", event => {
+    event.preventDefault();
+    deferredPrompt = event;
+    document.getElementById("installBtn").style.display = "block";
+});
+
+document.getElementById("installBtn").addEventListener("click", async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    document.getElementById("installBtn").style.display = "none";
+});
+
+window.addEventListener("appinstalled", () => {
+    document.getElementById("installBtn").style.display = "none";
+});
+
+if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+        navigator.serviceWorker.register("sw.js").catch(err => console.log("SW error:", err));
+    });
+}
+
+loadTodayData();
+updateClock();
+setInterval(updateClock, 1000);
+</script>
+
+</body>
+</html>
